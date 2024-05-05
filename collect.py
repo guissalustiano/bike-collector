@@ -1,23 +1,22 @@
 from datetime import datetime
 from multiprocessing import Process
 
-def apply_timestamp(
-    request,
-    colour = (0, 255, 0),
-    origin = (0, 30),
-    font = cv2.FONT_HERSHEY_SIMPLEX,
-    scale = 1,
-    thickness = 2,
-):
-    timestamp = datetime.now().isoformat()
-    with MappedArray(request, "main") as m:
-        cv2.putText(m.array, timestamp, origin, font, scale, colour, thickness)
-
-# Based on https://github.com/raspberrypi/picamera2/blob/main/examples/capture_video.py
 def record_raw(timestamp: str):
     from picamera2 import MappedArray, Picamera2
     from picamera2.encoders import H264Encoder
     import cv2
+
+    def apply_timestamp(
+        request,
+        colour = (0, 255, 0),
+        origin = (0, 30),
+        font = cv2.FONT_HERSHEY_SIMPLEX,
+        scale = 1,
+        thickness = 2,
+    ):
+        timestamp = datetime.now().isoformat()
+        with MappedArray(request, "main") as m:
+            cv2.putText(m.array, timestamp, origin, font, scale, colour, thickness)
 
     picam2 = Picamera2()
     video_config = picam2.create_video_configuration({"size": (1280, 720)})
@@ -44,7 +43,7 @@ def record_sensor(timestamp: str):
     
 if __name__ == '__main__':
     timestamp = datetime.now().isoformat()
-    p = Process(target=record_raw(), args=(timestamp,))
+    p = Process(target=record_raw, args=(timestamp,))
     p.start()
 
     p.join()
