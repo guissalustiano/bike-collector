@@ -2,6 +2,7 @@ import time
 from datetime import datetime
 import csv
 from multiprocessing import Process
+from signal import pause
 
 from loguru import logger
 
@@ -33,8 +34,7 @@ def record_camera(timestamp: str):
     logger.debug(f"Starting recorgind {timestamp}...")
     picam2.start_recording(encoder, f'{timestamp}-video.mjpeg', pts=f'{timestamp}-video.timestamp.txt')
     try:
-        while True:
-            time.sleep(10)
+        pause()
     finally:
         logger.debug("Stopping recording...")
         picam2.stop_recording()
@@ -55,15 +55,32 @@ def record_imu_sensor(timestamp: str):
             csvwriter.writerow([timestamp, temp, accel['x'], accel['y'], accel['z'], gyro['x'], gyro['y'], gyro['z']])
     
 if __name__ == '__main__':
+    from gpiozero import LED, Button
     timestamp = datetime.now().isoformat()
     logger.add(f'{timestamp}.log')
     p_camera = Process(target=record_camera, args=(timestamp,), daemon=True)
     p_imu = Process(target=record_imu_sensor, args=(timestamp,), daemon=True)
 
-    #p_camera.start()
-    p_imu.start()
+    button = Button(26, hold_time=5)
 
-    time.sleep(10)
+    def start():
+        logger.debug("start")
+        p_camera.start()
+        p_imu.start()
 
-    p_imu.terminate()
-    # p_camera.terminate()
+    def terminate():
+        logger.debug("end")
+        try:
+            p_imu.terminate()
+        except AttributeError:
+            pass
+        try:
+            p_camera.terminate()
+        except AttributeError:
+            pass
+        
+    button.when_held = start
+    button.when_released = terminate
+
+    pause()
+
