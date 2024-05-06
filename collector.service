@@ -1,0 +1,10 @@
+[Unit]
+Description=Rpi4 bike data collection
+After=multi-user.target
+
+[Service]
+ExecStart=/home/guiss/Documents/bike-collector/.venv/bin/python /home/guiss/Documents/bike-collector/collect.py
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

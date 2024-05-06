@@ -6,6 +6,8 @@ from signal import pause
 
 from loguru import logger
 
+PATH = "/home/guiss/Documents/bike-collector/"
+
 def record_camera(timestamp: str):
     from picamera2 import MappedArray, Picamera2
     from picamera2.encoders import JpegEncoder
@@ -32,7 +34,7 @@ def record_camera(timestamp: str):
     encoder = JpegEncoder(q=70)
 
     logger.debug(f"Starting recorgind {timestamp}...")
-    picam2.start_recording(encoder, f'{timestamp}-video.mjpeg', pts=f'{timestamp}-video.timestamp.txt')
+    picam2.start_recording(encoder, f'{PATH}/{timestamp}-video.mjpeg', pts=f'{timestamp}-video.timestamp.txt')
     try:
         pause()
     finally:
@@ -45,7 +47,7 @@ def record_imu_sensor(timestamp: str):
     MPU_ADDR = 0x68
     sensor = mpu6050(MPU_ADDR)
 
-    with open(f'{timestamp}-mpu.csv', 'w') as csvfile:
+    with open(f'{PATH}/{timestamp}-mpu.csv', 'w') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(["timestamp", "temp", "accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"])
 
@@ -57,7 +59,7 @@ def record_imu_sensor(timestamp: str):
 if __name__ == '__main__':
     from gpiozero import LED, Button
     timestamp = datetime.now().isoformat()
-    logger.add(f'{timestamp}.log')
+    logger.add(f'{PATH}/{timestamp}.log')
     p_camera = Process(target=record_camera, args=(timestamp,), daemon=True)
     p_imu = Process(target=record_imu_sensor, args=(timestamp,), daemon=True)
 
