@@ -47,7 +47,7 @@ def record_imu_sensor(timestamp: str):
     MPU_ADDR = 0x68
     sensor = mpu6050(MPU_ADDR)
 
-    with open(f'{PATH}/{timestamp}-mpu.csv', 'w') as csvfile:
+    with open(f'{PATH}/{timestamp}-mpu.csv', 'w', buffering=1) as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(["timestamp", "temp", "accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"])
 
@@ -66,7 +66,7 @@ def record_gps(timestamp: str):
         else:
             return None
 
-    with open(f'{PATH}/{timestamp}-gps.csv', 'w') as csvfile:
+    with open(f'{PATH}/{timestamp}-gps.csv', 'w', buffering=1) as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(["time",
                             "date",
