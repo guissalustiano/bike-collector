@@ -55,6 +55,57 @@ def record_imu_sensor(timestamp: str):
             timestamp = datetime.now().isoformat()
             [accel, gyro, temp] = sensor.get_all_data()
             csvwriter.writerow([timestamp, temp, accel['x'], accel['y'], accel['z'], gyro['x'], gyro['y'], gyro['z']])
+
+def record_gps(timestamp: str):
+    from serial import Serial
+    from pyubx2 import UBXReader
+
+    def maybe_getattribute(obj, property: str):
+        if hasattr(obj, property):
+            return obj.__getattribute__(property)
+        else:
+            return None
+
+    with open(f'{PATH}/{timestamp}-gps.csv', 'w') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(["time",
+                            "date",
+                            "lat",
+                            "lon",
+                            "alt",
+                            "altUnit",
+                            "sep",
+                            "sepUnit",
+                            "identity",
+                            "navStatus",
+                            "posMode",
+                            "spd",
+                            "status",
+                            "talker",
+                            "numSV"
+                        ])
+
+        with Serial('/dev/ttyACM0', 9600, timeout=3) as stream:
+            ubr = UBXReader(stream, protfilter=1)
+            for _, p in ubr:
+                if hasattr(p, "time") and hasattr(p, "lat") and hasattr(p, "lon") :
+                    csvwriter.writerow([
+                       p.time,
+                       maybe_getattribute(p, "date"),
+                       p.lat,
+                       p.lon,
+                       maybe_getattribute(p, "alt"),
+                       maybe_getattribute(p, "altUnit"),
+                       maybe_getattribute(p, "sep"),
+                       maybe_getattribute(p, "sepUnit"),
+                       maybe_getattribute(p, "identity"),
+                       maybe_getattribute(p, "navStatus"),
+                       maybe_getattribute(p, "posMode"),
+                       maybe_getattribute(p, "spd"),
+                       maybe_getattribute(p, "status"),
+                       maybe_getattribute(p, "talker"),
+                       maybe_getattribute(p, "numSV"),
+                   ])
     
 if __name__ == '__main__':
     from gpiozero import LED, Button
@@ -62,6 +113,7 @@ if __name__ == '__main__':
     logger.add(f'{PATH}/{timestamp}.log')
     p_camera = Process(target=record_camera, args=(timestamp,), daemon=True)
     p_imu = Process(target=record_imu_sensor, args=(timestamp,), daemon=True)
+    p_gps = Process(target=record_gps, args=(timestamp,), daemon=True)
 
     button = Button(26, hold_time=5)
 
@@ -69,11 +121,16 @@ if __name__ == '__main__':
         logger.debug("start")
         p_camera.start()
         p_imu.start()
+        p_gps.start()
 
     def terminate():
         logger.debug("end")
         try:
             p_imu.terminate()
+        except AttributeError:
+            pass
+        try:
+            p_gps.terminate()
         except AttributeError:
             pass
         try:
