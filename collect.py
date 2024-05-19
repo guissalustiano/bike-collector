@@ -34,7 +34,7 @@ def record_camera(timestamp: str):
     encoder = JpegEncoder(q=70)
 
     logger.debug(f"Starting recorgind {timestamp}...")
-    picam2.start_recording(encoder, f'{PATH}/{timestamp}-video.mjpeg', pts=f'{timestamp}-video.timestamp.txt')
+    picam2.start_recording(encoder, f'{PATH}/{timestamp}-video.mjpeg', pts=f'{PATH}/{timestamp}-video.timestamp.txt')
     try:
         pause()
     finally:
@@ -45,6 +45,7 @@ def record_imu_sensor(timestamp: str):
     from mpu6050 import mpu6050
 
     MPU_ADDR = 0x68
+    logger.debug(f"Starting MPU {timestamp}...")
     sensor = mpu6050(MPU_ADDR)
 
     with open(f'{PATH}/{timestamp}-mpu.csv', 'w', buffering=1) as csvfile:
@@ -111,14 +112,18 @@ if __name__ == '__main__':
     from gpiozero import LED, Button
     timestamp = datetime.now().isoformat()
     logger.add(f'{PATH}/{timestamp}.log')
-    p_camera = Process(target=record_camera, args=(timestamp,), daemon=True)
-    p_imu = Process(target=record_imu_sensor, args=(timestamp,), daemon=True)
-    p_gps = Process(target=record_gps, args=(timestamp,), daemon=True)
+    p_camera = None
+    p_imu = None
+    p_gps = None
 
     button = Button(26, hold_time=5)
 
     def start():
         logger.debug("start")
+        timestamp = datetime.now().isoformat()
+        p_camera = Process(target=record_camera, args=(timestamp,))
+        p_imu = Process(target=record_imu_sensor, args=(timestamp,))
+        p_gps = Process(target=record_gps, args=(timestamp,))
         p_camera.start()
         p_imu.start()
         p_gps.start()
