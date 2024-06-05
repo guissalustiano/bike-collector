@@ -3,12 +3,11 @@ from datetime import datetime
 import csv
 from multiprocessing import Process
 from signal import pause
+from pathlib import Path
 
 from loguru import logger
 
-PATH = "/home/guiss/Documents/bike-collector/"
-
-def record_camera(timestamp: str):
+def record_camera(basepath: Path):
     from picamera2 import MappedArray, Picamera2
     from picamera2.encoders import JpegEncoder
     import cv2
@@ -34,21 +33,21 @@ def record_camera(timestamp: str):
     encoder = JpegEncoder(q=70)
 
     logger.debug(f"Starting recorgind {timestamp}...")
-    picam2.start_recording(encoder, f'{PATH}/{timestamp}-video.mjpeg', pts=f'{PATH}/{timestamp}-video.timestamp.txt')
+    picam2.start_recording(encoder, (basepath / "video.mjpeg").as_posix(), pts=(basepath / "video_timestamp.txt").as_posix())
     try:
         pause()
     finally:
         logger.debug("Stopping recording...")
         picam2.stop_recording()
 
-def record_imu_sensor(timestamp: str):
+def record_imu_sensor(basepath: Path):
     from mpu6050 import mpu6050
 
     MPU_ADDR = 0x68
     logger.debug(f"Starting MPU {timestamp}...")
     sensor = mpu6050(MPU_ADDR)
 
-    with open(f'{PATH}/{timestamp}-mpu.csv', 'w', buffering=1) as csvfile:
+    with open(basepath / "mpu.csv", 'w', buffering=1) as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(["timestamp", "temp", "accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"])
 
@@ -67,7 +66,7 @@ def record_gps(timestamp: str):
         else:
             return None
 
-    with open(f'{PATH}/{timestamp}-gps.csv', 'w', buffering=1) as csvfile:
+    with open(basepath / "gps.csv", 'w', buffering=1) as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(["time",
                             "date",
@@ -110,8 +109,12 @@ def record_gps(timestamp: str):
     
 if __name__ == '__main__':
     from gpiozero import LED, Button
-    timestamp = datetime.now().isoformat()
+
     logger.add(f'{PATH}/{timestamp}.log')
+    timestamp = datetime.now().timestamp()
+    basepath = Path(str(timestamp))
+
+    logger.add(basepath / f'exec.log')
     p_camera = None
     p_imu = None
     p_gps = None
