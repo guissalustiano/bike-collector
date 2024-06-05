@@ -110,7 +110,6 @@ def record_gps(timestamp: str):
 if __name__ == '__main__':
     from gpiozero import LED, Button
 
-    logger.add(f'{PATH}/{timestamp}.log')
     timestamp = datetime.now().timestamp()
     basepath = Path(str(timestamp))
 
