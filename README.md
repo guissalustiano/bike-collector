@@ -43,6 +43,7 @@ deactivate
 You can find more information [here](https://docs.python.org/3/library/venv.html).
 
 ### 3. Install dependencies
+Enable i2c ([method 1 in this link](https://www.raspberrypi-spy.co.uk/2014/11/enabling-the-i2c-interface-on-the-raspberry-pi/))
 First, install Picamera and SMBus on the system.
 ```bash
 sudo apt install -y python3-picamera2
