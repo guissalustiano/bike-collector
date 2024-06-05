@@ -143,8 +143,9 @@ if __name__ == '__main__':
         except AttributeError:
             pass
         
-    button.when_held = start
-    button.when_released = terminate
+    #button.when_held = start
+    #button.when_released = terminate
+    start()
 
     pause()
 
