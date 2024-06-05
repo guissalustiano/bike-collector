@@ -32,7 +32,7 @@ def record_camera(basepath: Path):
 
     encoder = JpegEncoder(q=70)
 
-    logger.debug(f"Starting recorgind {timestamp}...")
+    logger.debug(f"Starting recorgind {basepath}...")
     picam2.start_recording(encoder, (basepath / "video.mjpeg").as_posix(), pts=(basepath / "video_timestamp.txt").as_posix())
     try:
         pause()
@@ -44,7 +44,7 @@ def record_imu_sensor(basepath: Path):
     from mpu6050 import mpu6050
 
     MPU_ADDR = 0x68
-    logger.debug(f"Starting MPU {timestamp}...")
+    logger.debug(f"Starting MPU {basepath}...")
     sensor = mpu6050(MPU_ADDR)
 
     with open(basepath / "mpu.csv", 'w', buffering=1) as csvfile:
@@ -56,7 +56,7 @@ def record_imu_sensor(basepath: Path):
             [accel, gyro, temp] = sensor.get_all_data()
             csvwriter.writerow([timestamp, temp, accel['x'], accel['y'], accel['z'], gyro['x'], gyro['y'], gyro['z']])
 
-def record_gps(timestamp: str):
+def record_gps(basepath: Path):
     from serial import Serial
     from pyubx2 import UBXReader
 
@@ -122,10 +122,9 @@ if __name__ == '__main__':
 
     def start():
         logger.debug("start")
-        timestamp = datetime.now().isoformat()
-        p_camera = Process(target=record_camera, args=(timestamp,))
-        p_imu = Process(target=record_imu_sensor, args=(timestamp,))
-        p_gps = Process(target=record_gps, args=(timestamp,))
+        p_camera = Process(target=record_camera, args=(basepath,))
+        p_imu = Process(target=record_imu_sensor, args=(basepath,))
+        p_gps = Process(target=record_gps, args=(basepath,))
         p_camera.start()
         p_imu.start()
         p_gps.start()
