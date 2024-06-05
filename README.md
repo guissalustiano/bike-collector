@@ -45,7 +45,7 @@ You can find more information [here](https://docs.python.org/3/library/venv.html
 ### 3. Install dependencies
 First, install Picamera and SMBus on the system.
 ```bash
-sudo apt install -y python3-picamera
+sudo apt install -y python3-picamera2
 sudo apt install -y python3-smbus
 ```
 
